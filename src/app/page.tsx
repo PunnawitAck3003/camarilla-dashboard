@@ -35,6 +35,7 @@ const dayColors: Record<string, string> = {
 export default function Page() {
   const [s50z25, setS50Z25] = useState<Summary | null>(null);
   const [goz25, setGOZ25] = useState<Summary | null>(null);
+  const [showBacklog, setShowBacklog] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
@@ -130,16 +131,18 @@ export default function Page() {
         </div>
 
         {/* Backlog section */}
-        <div className="w-full border-t border-white/40 pt-2 mt-2 text-xs text-gray-800 text-center">
-          <p>
-            <b>High:</b> {data.latest.high.toFixed(2)} &nbsp;
-            <b>Low:</b> {data.latest.low.toFixed(2)}
-          </p>
-          <p>
-            <b>Close:</b> {data.latest.close.toFixed(2)} &nbsp;
-            <b>Settle:</b> {data.latest.settlement.toFixed(2)}
-          </p>
-        </div>
+        {showBacklog && (
+          <div className="w-full border-t border-white/40 pt-2 mt-2 text-xs text-gray-800 text-center">
+            <p>
+              <b>High:</b> {data.latest.high.toFixed(2)} &nbsp;
+              <b>Low:</b> {data.latest.low.toFixed(2)}
+            </p>
+            <p>
+              <b>Close:</b> {data.latest.close.toFixed(2)} &nbsp;
+              <b>Settle:</b> {data.latest.settlement.toFixed(2)}
+            </p>
+          </div>
+        )}
       </div>
     );
   };
@@ -154,6 +157,12 @@ export default function Page() {
       {!s50z25 && !goz25 && (
         <p className="text-gray-600 text-sm animate-pulse">Loading data...</p>
       )}
+      <button
+          onClick={() => setShowBacklog((s) => !s)}
+          className="px-4 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
+        >
+          {showBacklog ? "Hide Backlog" : "Show Backlog"}
+        </button>
     </main>
   );
 }
