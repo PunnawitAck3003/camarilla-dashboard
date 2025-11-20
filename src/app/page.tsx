@@ -29,8 +29,160 @@ const dayColors: Record<string, string> = {
   Thu: "bg-orange-400 text-white",
   Fri: "bg-sky-400 text-white",
   Sat: "bg-purple-400 text-white",
-  Sun: "bg-gray-400 text-white",
+  Sun: "bg-red-400 text-white",
 };
+
+function SummaryCard({
+  data,
+  type,
+  showBacklog,
+}: {
+  data: Summary;
+  type: "S50Z25" | "GOZ25";
+  showBacklog: boolean;
+}) {
+  const [trend, setTrend] = useState(data.trend);
+
+  const [latestDay, setLatestDay] = useState({
+    ...data.latest,
+  });
+
+  const [nextDay, setNextDay] = useState({
+    ...data.nextTradingDay,
+  });
+
+  const isOut = trend.toLowerCase() === "out";
+  const trendColor = isOut ? "bg-red-500 text-white" : "bg-green-500 text-white";
+
+  const latestDayColor = dayColors[latestDay.day] || "bg-gray-400 text-white";
+  const nextDayColor = dayColors[nextDay.day] || "bg-gray-400 text-white";
+
+  const toggleTrend = () => {
+    setTrend((prev) => (prev.toLowerCase() === "out" ? "In" : "Out"));
+  };
+
+  function addOneDay(dateStr: string): { date: string; day: string } {
+    const [d, m, y] = dateStr.split("/").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + 1);
+
+    const dayShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dt.getDay()];
+    const newDate = dt.toLocaleDateString("en-GB");
+
+    return { date: newDate, day: dayShort };
+  }
+
+  const handleLatestDay = () => {
+    const next = addOneDay(latestDay.date);
+    setLatestDay({
+      ...latestDay,
+      date: next.date,
+      day: next.day,
+    });
+  };
+
+  const handleNextDay = () => {
+    const next = addOneDay(nextDay.date);
+    setNextDay({
+      ...nextDay,
+      date: next.date,
+      day: next.day,
+    });
+  };
+
+  return (
+    <div
+      className="flex flex-col items-center justify-center p-4 rounded-2xl 
+      shadow-[0_8px_32px_rgba(0,0,0,0.1)] w-full max-w-sm mx-auto 
+      backdrop-blur-md bg-white/40 border border-white/30 text-gray-900"
+    >
+      <div className="flex flex-wrap justify-center gap-2 mb-2">
+        {type === "GOZ25" ? (
+          <>
+            <button
+              onClick={handleLatestDay}
+              className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${latestDayColor}`}
+            >
+              {latestDay.date} {latestDay.day}
+            </button>
+
+            <button
+              onClick={handleNextDay}
+              className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${nextDayColor}`}
+            >
+              {nextDay.date} {nextDay.day}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={handleNextDay}
+            className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${nextDayColor}`}
+          >
+            {nextDay.date} {nextDay.day}
+          </button>
+        )}
+
+        <button
+          onClick={toggleTrend}
+          className={`px-3 py-1 rounded-full text-xs font-semibold shadow-md ${trendColor}`}
+        >
+          {trend}
+        </button>
+      </div>
+
+      <h2 className="text-xl font-bold mb-3">{data.symbol}</h2>
+
+      {/* Camarilla */}
+      <div className="w-full flex justify-center">
+        <div className="w-fit text-sm space-y-0.5">
+          {Object.entries(data.camarillaLevels).map(([key, value]) => {
+            const formattedValue = value.toFixed(2);
+
+            let textColor = "";
+            if (key.startsWith("H"))
+              textColor = key === "H06" || key === "H05" ? "text-red-700" : "text-red-500";
+            else if (key.startsWith("L"))
+              textColor = key === "L05" || key === "L06" ? "text-green-700" : "text-green-600";
+
+            return (
+              <div
+                key={key}
+                className="w-full px-3 py-0.5 rounded-lg bg-white/50 
+                border border-white/30 shadow-sm backdrop-blur-sm 
+                flex justify-center"
+              >
+                <div className="flex items-center font-mono">
+                  <span className={`font-semibold ${textColor}`}>{key}</span>
+                  <span className="mx-5" />
+                  <span className={textColor}>{formattedValue}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 🔥 Backlog Section */}
+      {showBacklog && (
+        <div className="w-full border-t border-white/40 pt-2 mt-2 text-xs text-gray-800 text-center">
+          <p>
+            <b>High:</b> {latestDay.high.toFixed(2)} &nbsp;
+            <b>Low:</b> {latestDay.low.toFixed(2)}
+          </p>
+          <p>
+            <b>Close:</b> {latestDay.close.toFixed(2)} &nbsp;
+            <b>Settle:</b> {latestDay.settlement.toFixed(2)}
+          </p>
+          <p>
+            <b>Ref. Date:</b> {latestDay.date} {latestDay.day} &nbsp;
+            <b>Trend:</b> {trend}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export default function Page() {
   const [s50z25, setS50Z25] = useState<Summary | null>(null);
@@ -49,120 +201,22 @@ export default function Page() {
     fetchData();
   }, []);
 
-  const renderSummary = (data: Summary, type: "S50Z25" | "GOZ25") => {
-    const isOut = data.trend.toLowerCase() === "out";
-    const trendColor = isOut ? "bg-red-500 text-white" : "bg-green-500 text-white";
-
-    const nextDayColor = dayColors[data.nextTradingDay.day] || "bg-gray-400 text-white";
-    const latestDayColor = dayColors[data.latest.day] || "bg-gray-400 text-white";
-
-    return (
-      <div
-        className="flex flex-col items-center justify-center p-4 rounded-2xl 
-        shadow-[0_8px_32px_rgba(0,0,0,0.1)] w-full max-w-sm mx-auto 
-        backdrop-blur-md bg-white/40 border border-white/30 text-gray-900"
-      >
-        {/* Header section */}
-        <div className="flex flex-wrap justify-center gap-2 mb-2">
-          {type === "GOZ25" ? (
-            <>
-              <button
-                className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${latestDayColor}`}
-              >
-                {data.latest.date} {data.latest.day}
-              </button>
-              <button
-                className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${nextDayColor}`}
-              >
-                {data.nextTradingDay.date} {data.nextTradingDay.day}
-              </button>
-            </>
-          ) : (
-            <button
-              className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${nextDayColor}`}
-            >
-              {data.nextTradingDay.date} {data.nextTradingDay.day}
-            </button>
-          )}
-
-          {/* Trend button */}
-          <button
-            className={`px-3 py-1 rounded-full text-xs font-semibold shadow-md ${trendColor}`}
-          >
-            {data.trend}
-          </button>
-        </div>
-
-        {/* Symbol header */}
-        <h2 className="text-xl font-bold mb-3 drop-shadow-sm">{data.symbol}</h2>
-
-        {/* Camarilla levels */}
-        <div className="w-full flex justify-center">
-          <div className="w-fit text-sm space-y-0.5">
-            {Object.entries(data.camarillaLevels).map(([key, value]) => {
-              const formattedValue = value.toFixed(2); // ✅ ทศนิยม 2 ตำแหน่งเสมอ
-
-              // ✅ เงื่อนไขสี
-              let textColor = "";
-              if (key.startsWith("H")) {
-                textColor =
-                  key === "H06" || key === "H05" ? "text-red-700" : "text-red-500";
-              } else if (key.startsWith("L")) {
-                textColor =
-                  key === "L05" || key === "L06" ? "text-green-700" : "text-green-600";
-              }
-
-              return (
-                <div
-                  key={key}
-                  className="w-full px-3 py-0.5 rounded-lg bg-white/50 
-                  border border-white/30 shadow-sm backdrop-blur-sm 
-                  flex justify-center"
-                >
-                  <div className="flex items-center font-mono">
-                    <span className={`font-semibold ${textColor}`}>{key}</span>
-                    <span className="mx-5" />
-                    <span className={`${textColor}`}>{formattedValue}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Backlog section */}
-        {showBacklog && (
-          <div className="w-full border-t border-white/40 pt-2 mt-2 text-xs text-gray-800 text-center">
-            <p>
-              <b>High:</b> {data.latest.high.toFixed(2)} &nbsp;
-              <b>Low:</b> {data.latest.low.toFixed(2)}
-            </p>
-            <p>
-              <b>Close:</b> {data.latest.close.toFixed(2)} &nbsp;
-              <b>Settle:</b> {data.latest.settlement.toFixed(2)}
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <main
       className="flex flex-col items-center justify-center min-h-screen
       bg-gradient-to-br from-cyan-100 via-blue-50 to-purple-100 p-3 space-y-4"
     >
-      {s50z25 && renderSummary(s50z25, "S50Z25")}
-      {goz25 && renderSummary(goz25, "GOZ25")}
-      {!s50z25 && !goz25 && (
+      {s50z25 && <SummaryCard data={s50z25} type="S50Z25" showBacklog={showBacklog} />}
+      {goz25 && <SummaryCard data={goz25} type="GOZ25" showBacklog={showBacklog} />}
+      {(!s50z25 || !goz25) && (
         <p className="text-gray-600 text-sm animate-pulse">Loading data...</p>
       )}
       <button
-          onClick={() => setShowBacklog((s) => !s)}
-          className="px-4 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
-        >
-          {showBacklog ? "Hide Backlog" : "Show Backlog"}
-        </button>
+        onClick={() => setShowBacklog((s) => !s)}
+        className="px-4 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
+      >
+        {showBacklog ? "Hide Backlog" : "Show Backlog"}
+      </button>
     </main>
   );
 }
