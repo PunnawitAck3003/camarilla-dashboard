@@ -38,7 +38,7 @@ function SummaryCard({
   showBacklog,
 }: {
   data: Summary;
-  type: "S50Z25" | "GOZ25";
+  type: "S50H26" | "GOH26";
   showBacklog: boolean;
 }) {
   const [trend, setTrend] = useState(data.trend);
@@ -97,7 +97,7 @@ function SummaryCard({
       backdrop-blur-md bg-white/40 border border-white/30 text-gray-900"
     >
       <div className="flex flex-wrap justify-center gap-2 mb-2">
-        {type === "GOZ25" ? (
+        {type === "GOH26" ? (
           <>
             <button
               onClick={handleLatestDay}
@@ -185,18 +185,18 @@ function SummaryCard({
 
 
 export default function Page() {
-  const [s50z25, setS50Z25] = useState<Summary | null>(null);
-  const [goz25, setGOZ25] = useState<Summary | null>(null);
+  const [s50h26, setS50H26] = useState<Summary | null>(null);
+  const [goh26, setGOH26] = useState<Summary | null>(null);
   const [showBacklog, setShowBacklog] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       const [s50, goz] = await Promise.all([
-        fetch("https://camarilla-api.vercel.app/api/v1/tfex/s50z25/summary").then((r) => r.json()),
-        fetch("https://camarilla-api.vercel.app/api/v1/tfex/goz25/summary").then((r) => r.json()),
+        fetch("https://camarilla-api.vercel.app/api/v1/tfex/s50h26/summary").then((r) => r.json()),
+        fetch("https://camarilla-api.vercel.app/api/v1/tfex/goh26/summary").then((r) => r.json()),
       ]);
-      setS50Z25(s50);
-      setGOZ25(goz);
+      setS50H26(s50);
+      setGOH26(goz);
     }
     fetchData();
   }, []);
@@ -206,9 +206,9 @@ export default function Page() {
       className="flex flex-col items-center justify-center min-h-screen
       bg-gradient-to-br from-cyan-100 via-blue-50 to-purple-100 p-3 space-y-4"
     >
-      {s50z25 && <SummaryCard data={s50z25} type="S50Z25" showBacklog={showBacklog} />}
-      {goz25 && <SummaryCard data={goz25} type="GOZ25" showBacklog={showBacklog} />}
-      {(!s50z25 || !goz25) && (
+      {s50h26 && <SummaryCard data={s50h26} type="S50H26" showBacklog={showBacklog} />}
+      {goh26 && <SummaryCard data={goh26} type="GOH26" showBacklog={showBacklog} />}
+      {(!s50h26 || !goh26) && (
         <p className="text-gray-600 text-sm animate-pulse">Loading data...</p>
       )}
       <button
