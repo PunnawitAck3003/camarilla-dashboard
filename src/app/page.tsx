@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SYMBOLS, SymbolType, API_BASE_URL } from "@/constants/symbols";
 
 interface Summary {
   scrapedAt: string;
@@ -38,7 +39,7 @@ function SummaryCard({
   showBacklog,
 }: {
   data: Summary;
-  type: "S50H26" | "GOH26";
+  type: SymbolType;
   showBacklog: boolean;
 }) {
   const [trend, setTrend] = useState(data.trend);
@@ -97,7 +98,7 @@ function SummaryCard({
       backdrop-blur-md bg-white/40 border border-white/30 text-gray-900"
     >
       <div className="flex flex-wrap justify-center gap-2 mb-2">
-        {type === "GOH26" ? (
+        {type === SYMBOLS.GO ? (
           <>
             <button
               onClick={handleLatestDay}
@@ -183,20 +184,19 @@ function SummaryCard({
   );
 }
 
-
 export default function Page() {
-  const [s50h26, setS50H26] = useState<Summary | null>(null);
-  const [goh26, setGOH26] = useState<Summary | null>(null);
+  const [s50, setS50] = useState<Summary | null>(null);
+  const [go, setGO] = useState<Summary | null>(null);
   const [showBacklog, setShowBacklog] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-      const [s50, goz] = await Promise.all([
-        fetch("https://camarilla-api.vercel.app/api/v1/tfex/s50h26/summary").then((r) => r.json()),
-        fetch("https://camarilla-api.vercel.app/api/v1/tfex/goh26/summary").then((r) => r.json()),
+      const [s50Data, goData] = await Promise.all([
+        fetch(`${API_BASE_URL}/${SYMBOLS.S50.toLowerCase()}/summary`).then((r) => r.json()),
+        fetch(`${API_BASE_URL}/${SYMBOLS.GO.toLowerCase()}/summary`).then((r) => r.json()),
       ]);
-      setS50H26(s50);
-      setGOH26(goz);
+      setS50(s50Data);
+      setGO(goData);
     }
     fetchData();
   }, []);
@@ -206,11 +206,9 @@ export default function Page() {
       className="flex flex-col items-center justify-center min-h-screen
       bg-gradient-to-br from-cyan-100 via-blue-50 to-purple-100 p-3 space-y-4"
     >
-      {s50h26 && <SummaryCard data={s50h26} type="S50H26" showBacklog={showBacklog} />}
-      {goh26 && <SummaryCard data={goh26} type="GOH26" showBacklog={showBacklog} />}
-      {(!s50h26 || !goh26) && (
-        <p className="text-gray-600 text-sm animate-pulse">Loading data...</p>
-      )}
+      {s50 && <SummaryCard data={s50} type={SYMBOLS.S50} showBacklog={showBacklog} />}
+      {go && <SummaryCard data={go} type={SYMBOLS.GO} showBacklog={showBacklog} />}
+      {(!s50 || !go) && <p className="text-gray-600 text-sm animate-pulse">Loading data...</p>}
       <button
         onClick={() => setShowBacklog((s) => !s)}
         className="px-4 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
