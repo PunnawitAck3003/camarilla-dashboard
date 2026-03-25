@@ -1,4 +1,4 @@
-export const CONTRACT_SUFFIX = "H26";
+export const CONTRACT_SUFFIX = "M26";
 export const API_BASE_URL = "https://camarilla-api.vercel.app/api/v1/tfex";
 
 export const SYMBOLS = {
